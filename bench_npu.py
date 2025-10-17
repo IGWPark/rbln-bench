@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any
 
-from rbln_bench.benchmark import run_benchmark, save_benchmark_result
+from rbln_bench.benchmark import run_benchmark, run_benchmark_with_engine, create_engine, save_benchmark_result
 from rbln_bench.models import resolve_model_path, get_model_info
 from rbln_bench.monitor import format_monitoring_metrics
 
@@ -167,24 +167,25 @@ async def run_experiment(config_path: Path, output_dir: Path):
                 model_output_dir = output_dir / model_name
                 model_output_dir.mkdir(parents=True, exist_ok=True)
 
-                # Get request counts for this batch size
                 if request_patterns:
                     request_counts = request_patterns.get(str(batch_size), [batch_size])
                 else:
-                    # Legacy format: workloads contain num_requests
                     request_counts = [workload.get("num_requests", 10) for workload in workloads]
-                    request_counts = list(set(request_counts))  # Remove duplicates
+                    request_counts = list(set(request_counts))
+
+                try:
+                    engine, engine_config = create_engine(model_path=str(model_path))
+                except Exception as e:
+                    print(f"❌ Failed to initialize engine for {model_name} (bs={batch_size}): {e}")
+                    continue
 
                 for workload in workloads:
                     input_len = workload["input_len"]
                     output_len = workload["output_len"]
 
-                    # Handle both old and new config formats
                     if "num_requests" in workload:
-                        # Old format: use num_requests from workload
                         requests_to_test = [workload["num_requests"]]
                     else:
-                        # New format: use request_patterns
                         requests_to_test = request_counts
 
                     for num_requests in requests_to_test:
@@ -200,16 +201,27 @@ async def run_experiment(config_path: Path, output_dir: Path):
                                 print(f"⏭️  Skipping {model_name} (bs={batch_size}, input={input_len}, req={num_requests}): Result already exists")
                             continue
 
-                        await run_single_benchmark(
-                            model_path=model_path,
-                            model_short_name=model_name,
-                            batch_size=batch_size,
+                        print(f"\n{'='*70}")
+                        print(f"Running benchmark: {model_name} (bs={batch_size})")
+                        print(f"Workload: input={input_len}, output={output_len}, requests={num_requests}")
+                        print(f"{'='*70}\n")
+
+                        bench_result = await run_benchmark_with_engine(
+                            engine=engine,
+                            engine_config=engine_config,
+                            num_requests=num_requests,
                             input_len=input_len,
                             output_len=output_len,
-                            num_requests=num_requests,
-                            output_path=output_path,
-                            experiment_name=experiment_name,
                         )
+
+                        metadata = build_result_metadata(model_name, model_path, batch_size, experiment_name)
+                        result = {
+                            **metadata,
+                            **bench_result,
+                            "monitoring": {},
+                        }
+
+                        save_benchmark_result(result, output_path)
 
             except ValueError as e:
                 print(f"⚠️  Skipping {model_name}: {e}")

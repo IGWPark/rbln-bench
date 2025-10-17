@@ -66,25 +66,27 @@ async def send_request(
     }
 
 
-async def run_benchmark(
+def create_engine(
     model_path: str,
-    num_requests: int,
-    input_len: int,
-    output_len: int,
     max_model_len: Optional[int] = None,
     block_size: Optional[int] = None,
     max_num_batched_tokens: Optional[int] = None,
     max_num_seqs: Optional[int] = None,
     gpu_memory_utilization: Optional[float] = None,
-) -> Dict[str, Any]:
-    """Run benchmark and return comprehensive results."""
-
+) -> tuple[AsyncLLMEngine, Dict[str, Any]]:
     rbln_config = load_rbln_config(model_path)
 
     block_size = block_size or rbln_config.get("kvcache_block_size", 4096)
     max_model_len = max_model_len or rbln_config.get("max_seq_len", 8192)
     max_num_batched_tokens = max_num_batched_tokens or rbln_config.get("max_seq_len", 8192)
     max_num_seqs = max_num_seqs or rbln_config.get("batch_size", 1)
+
+    engine_config = {
+        "max_num_seqs": max_num_seqs,
+        "block_size": block_size,
+        "max_model_len": max_model_len,
+        "max_num_batched_tokens": max_num_batched_tokens,
+    }
 
     print(f"Initializing AsyncLLMEngine for {model_path}...")
 
@@ -99,27 +101,19 @@ async def run_benchmark(
     if gpu_memory_utilization is not None:
         engine_args_dict["gpu_memory_utilization"] = gpu_memory_utilization
 
-    try:
-        engine_args = AsyncEngineArgs(**engine_args_dict)
-        engine = AsyncLLMEngine.from_engine_args(engine_args)
-    except Exception as e:
-        error_msg = str(e)
-        print(f"❌ Failed to initialize engine: {error_msg}")
-        return {
-            "error": error_msg,
-            "workload": {
-                "input_len": input_len,
-                "output_len": output_len,
-                "num_requests": num_requests,
-            },
-            "engine_config": {
-                "max_num_seqs": max_num_seqs,
-                "block_size": block_size,
-                "max_model_len": max_model_len,
-                "max_num_batched_tokens": max_num_batched_tokens,
-            },
-        }
+    engine_args = AsyncEngineArgs(**engine_args_dict)
+    engine = AsyncLLMEngine.from_engine_args(engine_args)
 
+    return engine, engine_config
+
+
+async def run_benchmark_with_engine(
+    engine: AsyncLLMEngine,
+    engine_config: Dict[str, Any],
+    num_requests: int,
+    input_len: int,
+    output_len: int,
+) -> Dict[str, Any]:
     prompts = [list(range(input_len)) for _ in range(num_requests)]
 
     sampling_params = SamplingParams(
@@ -166,12 +160,7 @@ async def run_benchmark(
             "output_len": output_len,
             "num_requests": num_requests,
         },
-        "engine_config": {
-            "max_num_seqs": max_num_seqs,
-            "block_size": block_size,
-            "max_model_len": max_model_len,
-            "max_num_batched_tokens": max_num_batched_tokens,
-        },
+        "engine_config": engine_config,
         "summary": {
             "total_time_s": round(total_time, 2),
             "completed_requests": len(successful_results),
@@ -232,6 +221,54 @@ async def run_benchmark(
         }
 
     return result
+
+
+async def run_benchmark(
+    model_path: str,
+    num_requests: int,
+    input_len: int,
+    output_len: int,
+    max_model_len: Optional[int] = None,
+    block_size: Optional[int] = None,
+    max_num_batched_tokens: Optional[int] = None,
+    max_num_seqs: Optional[int] = None,
+    gpu_memory_utilization: Optional[float] = None,
+) -> Dict[str, Any]:
+    try:
+        engine, engine_config = create_engine(
+            model_path=model_path,
+            max_model_len=max_model_len,
+            block_size=block_size,
+            max_num_batched_tokens=max_num_batched_tokens,
+            max_num_seqs=max_num_seqs,
+            gpu_memory_utilization=gpu_memory_utilization,
+        )
+    except Exception as e:
+        error_msg = str(e)
+        print(f"❌ Failed to initialize engine: {error_msg}")
+        rbln_config = load_rbln_config(model_path)
+        return {
+            "error": error_msg,
+            "workload": {
+                "input_len": input_len,
+                "output_len": output_len,
+                "num_requests": num_requests,
+            },
+            "engine_config": {
+                "max_num_seqs": max_num_seqs or rbln_config.get("batch_size", 1),
+                "block_size": block_size or rbln_config.get("kvcache_block_size", 4096),
+                "max_model_len": max_model_len or rbln_config.get("max_seq_len", 8192),
+                "max_num_batched_tokens": max_num_batched_tokens or rbln_config.get("max_seq_len", 8192),
+            },
+        }
+
+    return await run_benchmark_with_engine(
+        engine=engine,
+        engine_config=engine_config,
+        num_requests=num_requests,
+        input_len=input_len,
+        output_len=output_len,
+    )
 
 
 def save_benchmark_result(
