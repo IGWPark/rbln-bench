@@ -1,0 +1,16 @@
+{
+  "name": "quantization_comparison",
+  "description": "Compare FP16 vs FP8 vs W8A16 quantization for Llama-3.1-8B",
+  "models": [
+    "llama-3.1-8b",
+    "llama-3.1-8b-fp8",
+    "llama-3.1-8b-w8a16"
+  ],
+  "batch_size": 1,
+  "workloads": [
+    {"input_len": 1000, "output_len": 128, "num_requests": 10},
+    {"input_len": 2000, "output_len": 128, "num_requests": 10},
+    {"input_len": 4000, "output_len": 128, "num_requests": 10},
+    {"input_len": 8000, "output_len": 128, "num_requests": 10}
+  ]
+}

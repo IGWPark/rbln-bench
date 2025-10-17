@@ -1,0 +1,23 @@
+{
+  "name": "npu_vs_gpu",
+  "description": "Compare NPU vs GPU performance with different batch sizes and context lengths",
+  "models": [
+    "qwen3-0.6b",
+    "qwen3-1.7b",
+    "qwen3-4b"
+  ],
+  "batch_sizes": [1, 4, 8, 16, 32],
+  "request_patterns": {
+    "1": [10],
+    "4": [4, 16],
+    "8": [8, 32],
+    "16": [16, 64],
+    "32": [32, 64]
+  },
+  "workloads": [
+    {"input_len": 1000, "output_len": 128},
+    {"input_len": 2000, "output_len": 128},
+    {"input_len": 4000, "output_len": 128},
+    {"input_len": 8000, "output_len": 128}
+  ]
+}

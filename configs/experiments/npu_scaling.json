@@ -1,0 +1,20 @@
+{
+  "name": "npu_scaling",
+  "description": "Compare NPU models of different sizes with varying context lengths",
+  "models": [
+    "gpt2-medium",
+    "qwen3-0.6b",
+    "qwen3-1.7b",
+    "qwen3-4b",
+    "llama-3.1-8b",
+    "llama-3.1-8b-fp8",
+    "llama-3.1-8b-w8a16"
+  ],
+  "batch_size": 1,
+  "workloads": [
+    {"input_len": 1000, "output_len": 128, "num_requests": 10},
+    {"input_len": 2000, "output_len": 128, "num_requests": 10},
+    {"input_len": 4000, "output_len": 128, "num_requests": 10},
+    {"input_len": 8000, "output_len": 128, "num_requests": 10}
+  ]
+}

@@ -1,0 +1,16 @@
+[
+  {"model_id": "Qwen/Qwen3-0.6B", "batch_size": 4, "max_seq_len": 8192, "kvcache_partition_len": 4096},
+  {"model_id": "Qwen/Qwen3-0.6B", "batch_size": 8, "max_seq_len": 8192, "kvcache_partition_len": 4096},
+  {"model_id": "Qwen/Qwen3-0.6B", "batch_size": 16, "max_seq_len": 8192, "kvcache_partition_len": 4096},
+  {"model_id": "Qwen/Qwen3-0.6B", "batch_size": 32, "max_seq_len": 8192, "kvcache_partition_len": 4096},
+
+  {"model_id": "Qwen/Qwen3-1.7B", "batch_size": 4, "max_seq_len": 8192, "kvcache_partition_len": 4096},
+  {"model_id": "Qwen/Qwen3-1.7B", "batch_size": 8, "max_seq_len": 8192, "kvcache_partition_len": 4096},
+  {"model_id": "Qwen/Qwen3-1.7B", "batch_size": 16, "max_seq_len": 8192, "kvcache_partition_len": 4096},
+  {"model_id": "Qwen/Qwen3-1.7B", "batch_size": 32, "max_seq_len": 8192, "kvcache_partition_len": 4096},
+
+  {"model_id": "Qwen/Qwen3-4B-Instruct-2507", "batch_size": 4, "max_seq_len": 8192, "kvcache_partition_len": 4096},
+  {"model_id": "Qwen/Qwen3-4B-Instruct-2507", "batch_size": 8, "max_seq_len": 8192, "kvcache_partition_len": 4096},
+  {"model_id": "Qwen/Qwen3-4B-Instruct-2507", "batch_size": 16, "max_seq_len": 8192, "kvcache_partition_len": 4096},
+  {"model_id": "Qwen/Qwen3-4B-Instruct-2507", "batch_size": 32, "max_seq_len": 8192, "kvcache_partition_len": 4096}
+]
