@@ -206,19 +206,49 @@ async def run_experiment(config_path: Path, output_dir: Path):
                         print(f"Workload: input={input_len}, output={output_len}, requests={num_requests}")
                         print(f"{'='*70}\n")
 
-                        bench_result = await run_benchmark_with_engine(
-                            engine=engine,
-                            engine_config=engine_config,
-                            num_requests=num_requests,
-                            input_len=input_len,
-                            output_len=output_len,
-                        )
+                        monitoring_data = None
+
+                        if MONITORING_AVAILABLE:
+                            @track(
+                                backend='npu',
+                                device_ids=[0],
+                                save=True,
+                                save_dir='monitoring',
+                                metadata={
+                                    'experiment': experiment_name,
+                                    'model': model_name,
+                                    'batch_size': batch_size,
+                                    'input_len': input_len,
+                                    'output_len': output_len,
+                                }
+                            )
+                            async def run_with_monitoring():
+                                return await run_benchmark_with_engine(
+                                    engine=engine,
+                                    engine_config=engine_config,
+                                    num_requests=num_requests,
+                                    input_len=input_len,
+                                    output_len=output_len,
+                                )
+
+                            bench_result = await run_with_monitoring()
+                            tracker = getattr(run_with_monitoring, "last_tracker", None)
+                            if tracker is not None:
+                                monitoring_data = tracker.export()
+                        else:
+                            bench_result = await run_benchmark_with_engine(
+                                engine=engine,
+                                engine_config=engine_config,
+                                num_requests=num_requests,
+                                input_len=input_len,
+                                output_len=output_len,
+                            )
 
                         metadata = build_result_metadata(model_name, model_path, batch_size, experiment_name)
                         result = {
                             **metadata,
                             **bench_result,
-                            "monitoring": {},
+                            "monitoring": format_monitoring_metrics(monitoring_data),
                         }
 
                         save_benchmark_result(result, output_path)
