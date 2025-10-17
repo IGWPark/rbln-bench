@@ -99,8 +99,26 @@ async def run_benchmark(
     if gpu_memory_utilization is not None:
         engine_args_dict["gpu_memory_utilization"] = gpu_memory_utilization
 
-    engine_args = AsyncEngineArgs(**engine_args_dict)
-    engine = AsyncLLMEngine.from_engine_args(engine_args)
+    try:
+        engine_args = AsyncEngineArgs(**engine_args_dict)
+        engine = AsyncLLMEngine.from_engine_args(engine_args)
+    except Exception as e:
+        error_msg = str(e)
+        print(f"❌ Failed to initialize engine: {error_msg}")
+        return {
+            "error": error_msg,
+            "workload": {
+                "input_len": input_len,
+                "output_len": output_len,
+                "num_requests": num_requests,
+            },
+            "engine_config": {
+                "max_num_seqs": max_num_seqs,
+                "block_size": block_size,
+                "max_model_len": max_model_len,
+                "max_num_batched_tokens": max_num_batched_tokens,
+            },
+        }
 
     prompts = [list(range(input_len)) for _ in range(num_requests)]
 

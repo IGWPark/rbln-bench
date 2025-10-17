@@ -195,24 +195,25 @@ async def run_experiment(config_path: Path, output_dir: Path, gpu_memory_util: f
                         output_path = model_output_dir / output_filename
 
                         if output_path.exists():
-                            print(f"⏭️  Skipping {model_name} (bs={batch_size}, input={input_len}, req={num_requests}): Result already exists")
+                            with open(output_path) as f:
+                                existing_result = json.load(f)
+                            if "error" in existing_result:
+                                print(f"⚠️  Skipping {model_name} (bs={batch_size}, input={input_len}, req={num_requests}): Previous error exists")
+                            else:
+                                print(f"⏭️  Skipping {model_name} (bs={batch_size}, input={input_len}, req={num_requests}): Result already exists")
                             continue
 
-                        try:
-                            await run_single_benchmark(
-                                hf_model_id=hf_model_id,
-                                model_short_name=model_name,
-                                batch_size=batch_size,
-                                input_len=input_len,
-                                output_len=output_len,
-                                num_requests=num_requests,
-                                gpu_memory_util=gpu_memory_util,
-                                output_path=output_path,
-                                experiment_name=experiment_name,
-                            )
-                        except Exception as e:
-                            print(f"❌ Error running benchmark for {model_name}: {e}")
-                            continue
+                        await run_single_benchmark(
+                            hf_model_id=hf_model_id,
+                            model_short_name=model_name,
+                            batch_size=batch_size,
+                            input_len=input_len,
+                            output_len=output_len,
+                            num_requests=num_requests,
+                            gpu_memory_util=gpu_memory_util,
+                            output_path=output_path,
+                            experiment_name=experiment_name,
+                        )
 
         except ValueError as e:
             print(f"⚠️  Skipping {model_name}: {e}")
