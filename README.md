@@ -104,9 +104,9 @@ rsync -avz compiled/ npu-server:/path/to/rbln-bench/compiled/
 ./scripts/run_npu_scaling.sh
 ```
 
-Tests 7 models (0.35B to 8B, including FP16/FP8/W8A16 quantization variants) with input lengths [1000, 2000, 4000, 8000] and 128 output tokens, batch_size=1.
+Tests 6 models (0.6B to 8B, including FP16/FP8/W8A16 quantization variants) with input lengths [1000, 2000, 4000, 8000] and 128 output tokens, batch_size=1.
 
-Models: gpt2-medium, qwen3-0.6b, qwen3-1.7b, qwen3-4b, llama-3.1-8b, llama-3.1-8b-fp8, llama-3.1-8b-w8a16
+Models: qwen3-0.6b, qwen3-1.7b, qwen3-4b, llama-3.1-8b, llama-3.1-8b-fp8, llama-3.1-8b-w8a16
 
 Results → `results/npu_scaling/`
 
@@ -179,7 +179,6 @@ python bench_npu.py experiment \
 
 | Short Name | HuggingFace ID | Size | Used In |
 |------------|---------------|------|---------|
-| `gpt2-medium` | openai-community/gpt2-medium | 0.35B | NPU Scaling |
 | `qwen3-0.6b` | Qwen/Qwen3-0.6B | 0.6B | NPU Scaling, NPU vs GPU |
 | `qwen3-1.7b` | Qwen/Qwen3-1.7B | 1.7B | NPU Scaling, NPU vs GPU |
 | `qwen3-4b` | Qwen/Qwen3-4B-Instruct-2507 | 4B | NPU Scaling, NPU vs GPU |
@@ -195,7 +194,6 @@ Other models can be added to configs as needed:
 |------------|---------------|------|
 | `qwen2.5-0.5b` | Qwen/Qwen2.5-0.5B-Instruct | 0.5B |
 | `qwen2.5-1.5b` | Qwen/Qwen2.5-1.5B-Instruct | 1.5B |
-| `gpt2-xl` | openai-community/gpt2-xl | 1.5B |
 | `gemma-2b` | google/gemma-2b-it | 2B |
 | `phi-2` | microsoft/Phi-2 | 2.7B |
 | `llama-3.2-3b` | meta-llama/Llama-3.2-3B-Instruct | 3B |

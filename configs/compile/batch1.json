@@ -1,11 +1,5 @@
 [
   {
-    "model_id": "openai-community/gpt2-medium",
-    "batch_size": 1,
-    "max_seq_len": 8192,
-    "kvcache_partition_len": 4096
-  },
-  {
     "model_id": "Qwen/Qwen3-0.6B",
     "batch_size": 1,
     "max_seq_len": 8192,
